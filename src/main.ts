@@ -22,22 +22,28 @@ const ctx = canvas.getContext("2d");
 const cursor = { x: 0, y: 0, active: false };
 
 // array for mouse input
-const points: { x: number; y: number }[] = [];
+const lines: { x: number, y: number }[][] = [];
+let currentLine: { x: number, y: number }[] | null = null;
 
 // add observer for "drawing-changed" event to clear and redraw user lines
-app.addEventListener("drawing-changed", (e) => {
+const updateCanvas = new Event("drawing-changed");
+
+canvas.addEventListener("drawing-changed", (e) => {
     // clear canvas
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // redraw points
-        for (let i = 0; i < points.length; i++) {
-            if (i === 0) {
+        for (const line of lines) {
+            if(line.length > 1) {
                 ctx.beginPath();
-                ctx.moveTo(points[i].x, points[i].y);
+                const {x,y} = line[0];
+                ctx.moveTo(x, y);
+                for(const {x,y} of line){
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
             }
-            ctx.lineTo(points[i].x, points[i].y);
-            ctx.stroke();
         }
     }
 });
@@ -49,24 +55,40 @@ canvas.addEventListener("mousedown", (e) => {
     cursor.active = true;
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
-
+    console.log(cursor.x, cursor.y);
+    
+    currentLine = [];
+    lines.push(currentLine);
+    if (currentLine) {
+        currentLine.push({ x: cursor.x, y: cursor.y });
+    }
     //dispatch "drawing-changed" event on canvas object after new point
+    canvas.dispatchEvent(updateCanvas);
     
 });
 
 canvas.addEventListener("mousemove", (e) => {
     if (cursor.active && ctx) {
-        ctx.beginPath();
+        /*ctx.beginPath();
         ctx.moveTo(cursor.x, cursor.y);
         ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.stroke();
+        ctx.stroke();*/
         cursor.x = e.offsetX;
         cursor.y = e.offsetY;
+        if (currentLine){
+            currentLine.push({ x: cursor.x, y: cursor.y });
+        }
+        //dispatch "drawing-changed" event on canvas object after new point
+        canvas.dispatchEvent(updateCanvas);
     }
 });
 
 canvas.addEventListener("mouseup", (e) => {
     cursor.active = false;
+    currentLine = null;
+
+    //dispatch "drawing-changed" event on canvas object after new point
+    canvas.dispatchEvent(updateCanvas);
 });
 
 // add clear button
@@ -75,6 +97,7 @@ clearButton.innerHTML = "Clear";
 clearButton.addEventListener("click", () => {
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lines.length = 0;
     }
 });
 app.append(clearButton);
