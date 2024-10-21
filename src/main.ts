@@ -13,7 +13,6 @@ appTitle.innerHTML = APP_NAME;
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
-
 app.append(appTitle);
 app.append(canvas);
 
@@ -97,6 +96,7 @@ clearButton.addEventListener("click", () => {
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lines.length = 0;
+        undoLines.length = 0;
     }
 });
 app.append(clearButton);
