@@ -98,17 +98,28 @@ clearButton.addEventListener("click", () => {
 });
 app.append(clearButton);
 
+const undoLines: { x: number, y: number }[][] = [];
 // add undo button
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
 undoButton.addEventListener("click", () => {
-    if (ctx) {
-        lines.pop();
+    if (ctx && lines.length > 0) {
+        undoLines.push(lines.pop() || []);
         canvas.dispatchEvent(updateCanvas);
     }
 });
 app.append(undoButton);
 
+// add redo button
+const redoButton = document.createElement("button");
+redoButton.innerHTML = "Redo";
+redoButton.addEventListener("click", () => {
+    if (ctx && undoLines.length > 0) {
+        lines.push(undoLines.pop() || []);
+        canvas.dispatchEvent(updateCanvas);
+    }
+});
+app.append(redoButton);
 
 
 
