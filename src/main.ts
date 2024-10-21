@@ -24,6 +24,8 @@ const cursor = { x: 0, y: 0, active: false };
 // array for mouse input
 const lines: { x: number, y: number }[][] = [];
 let currentLine: { x: number, y: number }[] | null = null;
+const undoLines: { x: number, y: number }[][] = [];
+
 
 // add observer for "drawing-changed" event to clear and redraw user lines
 const updateCanvas = new Event("drawing-changed");
@@ -62,6 +64,7 @@ canvas.addEventListener("mousedown", (e) => {
     if (currentLine) {
         currentLine.push({ x: cursor.x, y: cursor.y });
     }
+    undoLines.splice(0, undoLines.length);
     //dispatch "drawing-changed" event on canvas object after new point
     canvas.dispatchEvent(updateCanvas);
     
@@ -98,7 +101,6 @@ clearButton.addEventListener("click", () => {
 });
 app.append(clearButton);
 
-const undoLines: { x: number, y: number }[][] = [];
 // add undo button
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
