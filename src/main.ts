@@ -69,10 +69,6 @@ canvas.addEventListener("mousedown", (e) => {
 
 canvas.addEventListener("mousemove", (e) => {
     if (cursor.active && ctx) {
-        /*ctx.beginPath();
-        ctx.moveTo(cursor.x, cursor.y);
-        ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.stroke();*/
         cursor.x = e.offsetX;
         cursor.y = e.offsetY;
         if (currentLine){
@@ -101,6 +97,17 @@ clearButton.addEventListener("click", () => {
     }
 });
 app.append(clearButton);
+
+// add undo button
+const undoButton = document.createElement("button");
+undoButton.innerHTML = "Undo";
+undoButton.addEventListener("click", () => {
+    if (ctx) {
+        lines.pop();
+        canvas.dispatchEvent(updateCanvas);
+    }
+});
+app.append(undoButton);
 
 
 
