@@ -21,10 +21,37 @@ app.append(canvas);
 const ctx = canvas.getContext("2d");
 const cursor = { x: 0, y: 0, active: false };
 
+// array for mouse input
+const points: { x: number; y: number }[] = [];
+
+// add observer for "drawing-changed" event to clear and redraw user lines
+app.addEventListener("drawing-changed", (e) => {
+    // clear canvas
+    if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // redraw points
+        for (let i = 0; i < points.length; i++) {
+            if (i === 0) {
+                ctx.beginPath();
+                ctx.moveTo(points[i].x, points[i].y);
+            }
+            ctx.lineTo(points[i].x, points[i].y);
+            ctx.stroke();
+        }
+    }
+});
+       
+
+
+// get user input
 canvas.addEventListener("mousedown", (e) => {
     cursor.active = true;
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
+
+    //dispatch "drawing-changed" event on canvas object after new point
+    
 });
 
 canvas.addEventListener("mousemove", (e) => {
