@@ -16,15 +16,23 @@ canvas.height = 256;
 app.append(appTitle);
 app.append(canvas);
 
+// adding spacing between canvas and buttons
+const spacer = document.createElement("div");
+spacer.style.height = "20px";
+app.append(spacer);
+
 // add simple marker drawing
 const ctx = canvas.getContext("2d");
+if (ctx) {
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+}
 const cursor = { x: 0, y: 0, active: false };
 
 // array for mouse input
-const lines: { x: number, y: number }[][] = [];
-let currentLine: { x: number, y: number }[] | null = null;
-const undoLines: { x: number, y: number }[][] = [];
-
+const commands: LineCommand[] = [];
+const redoCommands: (LineCommand | never[])[] = [];
 
 // add observer for "drawing-changed" event to clear and redraw user lines
 const updateCanvas = new Event("drawing-changed");
@@ -33,59 +41,64 @@ canvas.addEventListener("drawing-changed", (e) => {
     // clear canvas
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // redraw points
-        for (const line of lines) {
-            if(line.length > 1) {
-                ctx.beginPath();
-                const {x,y} = line[0];
-                ctx.moveTo(x, y);
-                for(const {x,y} of line){
-                    ctx.lineTo(x, y);
-                }
-                ctx.stroke();
-            }
-        }
+        commands.forEach(command => command.execute());
     }
 });
-       
+
+// have display list hold onto objects that have display (ctx) method and accept context parameter
+//implement class used to represetn marker lines
+
+class LineCommand{
+    points: { x: number; y: number; }[];
+    constructor (x: number, y: number){
+        this.points = [{x, y}];
+    }
+    execute(){
+        if (ctx) {
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            const {x, y} = this.points[0];
+            ctx.moveTo(x, y);
+            for(const {x, y} of this.points){
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+    }
+    grow(x: number, y: number){
+        this.points.push({x, y});
+    }
+
+}
+
+let currentLineCommand: LineCommand | null = null;
+
 
 
 // get user input
 canvas.addEventListener("mousedown", (e) => {
-    cursor.active = true;
-    cursor.x = e.offsetX;
-    cursor.y = e.offsetY;
-    console.log(cursor.x, cursor.y);
-    
-    currentLine = [];
-    lines.push(currentLine);
-    if (currentLine) {
-        currentLine.push({ x: cursor.x, y: cursor.y });
-    }
-    undoLines.splice(0, undoLines.length);
-    //dispatch "drawing-changed" event on canvas object after new point
+    currentLineCommand = new LineCommand(e.offsetX, e.offsetY);
+    commands.push(currentLineCommand);
+    redoCommands.splice(0, redoCommands.length);
     canvas.dispatchEvent(updateCanvas);
-    
 });
+
 
 canvas.addEventListener("mousemove", (e) => {
     if (cursor.active && ctx) {
-        cursor.x = e.offsetX;
-        cursor.y = e.offsetY;
-        if (currentLine){
-            currentLine.push({ x: cursor.x, y: cursor.y });
-        }
-        //dispatch "drawing-changed" event on canvas object after new point
         canvas.dispatchEvent(updateCanvas);
+        if(e.buttons == 1){
+            if (currentLineCommand) {
+                currentLineCommand.points.push({x: e.offsetX, y: e.offsetY});
+            }
+            canvas.dispatchEvent(updateCanvas);
+        }
     }
 });
 
 canvas.addEventListener("mouseup", (e) => {
-    cursor.active = false;
-    currentLine = null;
-
-    //dispatch "drawing-changed" event on canvas object after new point
+    currentLineCommand = null;
     canvas.dispatchEvent(updateCanvas);
 });
 
@@ -94,9 +107,9 @@ const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
 clearButton.addEventListener("click", () => {
     if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        lines.length = 0;
-        undoLines.length = 0;
+        commands.splice(0, commands.length);
+        redoCommands.splice(0, redoCommands.length);
+        canvas.dispatchEvent(updateCanvas);
     }
 });
 app.append(clearButton);
@@ -105,8 +118,8 @@ app.append(clearButton);
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
 undoButton.addEventListener("click", () => {
-    if (ctx && lines.length > 0) {
-        undoLines.push(lines.pop() || []);
+    if (ctx && commands.length > 0) {
+        redoCommands.push(commands.pop() || []);
         canvas.dispatchEvent(updateCanvas);
     }
 });
@@ -116,8 +129,11 @@ app.append(undoButton);
 const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo";
 redoButton.addEventListener("click", () => {
-    if (ctx && undoLines.length > 0) {
-        lines.push(undoLines.pop() || []);
+    if (ctx && redoCommands.length > 0) {
+        const command = redoCommands.pop();
+        if (command instanceof LineCommand) {
+            commands.push(command);
+        }
         canvas.dispatchEvent(updateCanvas);
     }
 });
