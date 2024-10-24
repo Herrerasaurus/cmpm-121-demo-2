@@ -86,15 +86,8 @@ canvas.addEventListener("mousedown", (e) => {
 
 
 canvas.addEventListener("mousemove", (e) => {
-    if (cursor.active && ctx) {
-        canvas.dispatchEvent(updateCanvas);
-        if(e.buttons == 1){
-            if (currentLineCommand) {
-                currentLineCommand.points.push({x: e.offsetX, y: e.offsetY});
-            }
-            canvas.dispatchEvent(updateCanvas);
-        }
-    }
+    currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY});
+    canvas.dispatchEvent(updateCanvas);
 });
 
 canvas.addEventListener("mouseup", (e) => {
