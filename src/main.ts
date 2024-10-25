@@ -25,8 +25,8 @@ app.append(spacer);
 const ctx = canvas.getContext("2d");
 
 // array for mouse input
-const commands: LineCommand[] = [];
-const redoCommands: (LineCommand | never[])[] = [];
+const commands: (LineCommand | StickerCommand)[] = [];
+const redoCommands: (LineCommand | StickerCommand)[] = [];
 let cursorCommand: CursorCommand | null = null;
 
 // add observer for "drawing-changed" event to clear and redraw user lines
@@ -36,14 +36,14 @@ canvas.addEventListener("drawing-changed", (e) => {
     // clear canvas
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        commands.forEach(command => command.execute());
+        commands.forEach(command => command.display());
         if(cursorCommand){
-            cursorCommand.execute(ctx);
+            cursorCommand.display(ctx);
         }
     }
 });
 
-let cursor = "";
+let cursor = "●";
 
 class CursorCommand{
     cursor: string;
@@ -56,22 +56,31 @@ class CursorCommand{
         this.y = y;
         this.lineWidth = lineWidth;
     }
-    execute(ctx: CanvasRenderingContext2D){
+    display(ctx: CanvasRenderingContext2D){
+            let xShift = 0;
+            let yShift = 0;
             if(this.lineWidth == 6){
+                xShift = 8;
+                yShift = 3;
                 ctx.font = "20px Arial";
-            }else{
+            }else if (this.lineWidth == 2){
+                xShift = 5;
                 ctx.font = "10px Arial";
+            }else{
+                xShift = 15;
+                yShift = 6;
+                ctx.font = "30px Arial";
             }
-            ctx.fillText(this.cursor, this.x-5, this.y+3);
+            ctx.fillText(this.cursor, this.x - xShift, this.y + yShift);
         }
     }
 
 class LineCommand{
-    points: { x: number; y: number; lineWidth: number; }[];
+    points: {x: number; y: number; lineWidth: number;}[];
     constructor (x: number, y: number, lineWidth: number){
         this.points = [{x, y, lineWidth}];
     }
-    execute(){
+    display(){
         if (ctx) {
             ctx.strokeStyle = "black";
             ctx.beginPath();
@@ -87,10 +96,27 @@ class LineCommand{
     grow(x: number, y: number, lineWidth: number){
         this.points.push({x, y, lineWidth});
     }
-
 }
 
-let currentLineCommand: LineCommand | null = null;
+class StickerCommand{
+    points: {x: number; y: number; cursor: string}[];
+    constructor (x: number, y: number, cursor: string){
+        this.points = [{x, y, cursor}];
+    }
+    display(){
+        if (ctx) {
+            //place one of the stickers
+            ctx.font = "30px Arial";
+            const {x, y} = this.points[0];
+            ctx.fillText(cursor, x-15, y+5);
+        }
+    }
+    grow(x: number, y: number, cursor: string){
+        this.points.push({x, y, cursor});
+    }
+}
+
+let currentLineCommand: LineCommand | StickerCommand | null = null;
 
 let lineWidth = 2;
 
@@ -107,7 +133,11 @@ canvas.addEventListener("mouseenter", (e) => {
 
 // get user input for drawing
 canvas.addEventListener("mousedown", (e) => {
-    currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth);
+    if(cursor == "●"){
+        currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth);
+    }else{
+        currentLineCommand = new StickerCommand(e.offsetX, e.offsetY, cursor);
+    }
     commands.push(currentLineCommand);
     redoCommands.splice(0, redoCommands.length);
     canvas.dispatchEvent(updateCanvas);
@@ -117,8 +147,10 @@ canvas.addEventListener("mousedown", (e) => {
 canvas.addEventListener("mousemove", (e) => {
     cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth);
     canvas.dispatchEvent(updateCanvas);
-    if(e.buttons == 1){
-        currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
+    if(cursor == "●"){
+        if (currentLineCommand instanceof LineCommand) {
+            currentLineCommand.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
+        }
         canvas.dispatchEvent(updateCanvas);
     }
 });
@@ -145,7 +177,10 @@ const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
 undoButton.addEventListener("click", () => {
     if (ctx && commands.length > 0) {
-        redoCommands.push(commands.pop() || []);
+        const command = commands.pop();
+        if (command) {
+            redoCommands.push(command);
+        }
         canvas.dispatchEvent(updateCanvas);
     }
 });
@@ -157,7 +192,7 @@ redoButton.innerHTML = "Redo";
 redoButton.addEventListener("click", () => {
     if (ctx && redoCommands.length > 0) {
         const command = redoCommands.pop();
-        if (command instanceof LineCommand) {
+        if (command) {
             commands.push(command);
         }
         canvas.dispatchEvent(updateCanvas);
@@ -188,6 +223,7 @@ app.append(thinLine);
 const sticker1 = document.createElement("button");
 sticker1.innerHTML = "🧌";
 sticker1.addEventListener("click", () => {
+    lineWidth = 0;
     cursor = "🧌";
     canvas.dispatchEvent(updateCanvas);
 });
@@ -195,6 +231,7 @@ sticker1.addEventListener("click", () => {
 const sticker2 = document.createElement("button");
 sticker2.innerHTML = "🦆";
 sticker2.addEventListener("click", () => {
+    lineWidth = 0;
     cursor = "🦆"  ;
     canvas.dispatchEvent(updateCanvas);
 });
@@ -202,6 +239,7 @@ sticker2.addEventListener("click", () => {
 const sticker3 = document.createElement("button");
 sticker3.innerHTML = "😜";
 sticker3.addEventListener("click", () => {
+    lineWidth = 0;
     cursor = "😜";
     canvas.dispatchEvent(updateCanvas);
 });
