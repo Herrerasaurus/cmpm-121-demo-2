@@ -23,12 +23,9 @@ app.append(spacer);
 
 // add simple marker drawing
 const ctx = canvas.getContext("2d");
-if (ctx) {
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-}
-const cursor = { x: 0, y: 0, active: false };
+
+let lineThin = true;
+
 
 // array for mouse input
 const commands: LineCommand[] = [];
@@ -45,40 +42,43 @@ canvas.addEventListener("drawing-changed", (e) => {
     }
 });
 
-// have display list hold onto objects that have display (ctx) method and accept context parameter
-//implement class used to represetn marker lines
-
 class LineCommand{
-    points: { x: number; y: number; }[];
-    constructor (x: number, y: number){
-        this.points = [{x, y}];
+    points: { x: number; y: number; lineWidth: number; }[];
+    constructor (x: number, y: number, lineWidth: number){
+        this.points = [{x, y, lineWidth}];
     }
     execute(){
         if (ctx) {
             ctx.strokeStyle = "black";
-            ctx.lineWidth = 10;
             ctx.beginPath();
             const {x, y} = this.points[0];
             ctx.moveTo(x, y);
-            for(const {x, y} of this.points){
+            for(const {x, y, lineWidth} of this.points){
+                ctx.lineWidth = lineWidth;
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
         }
     }
-    grow(x: number, y: number){
-        this.points.push({x, y});
+    grow(x: number, y: number, lineWidth: number){
+        this.points.push({x, y, lineWidth});
     }
 
 }
 
 let currentLineCommand: LineCommand | null = null;
 
-
+let lineWidth = 2;
 
 // get user input
 canvas.addEventListener("mousedown", (e) => {
-    currentLineCommand = new LineCommand(e.offsetX, e.offsetY);
+    if(lineThin){
+        lineWidth = 2;
+    }
+    else{
+        lineWidth = 6;
+    }
+    currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth);
     commands.push(currentLineCommand);
     redoCommands.splice(0, redoCommands.length);
     canvas.dispatchEvent(updateCanvas);
@@ -86,7 +86,7 @@ canvas.addEventListener("mousedown", (e) => {
 
 
 canvas.addEventListener("mousemove", (e) => {
-    currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY});
+    currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
     canvas.dispatchEvent(updateCanvas);
 });
 
@@ -131,6 +131,23 @@ redoButton.addEventListener("click", () => {
     }
 });
 app.append(redoButton);
+
+//adding different line width buttons
+const thickLine = document.createElement("button");
+thickLine.innerHTML = "Thick Line";
+thickLine.addEventListener("click", () => {
+    lineThin = false;
+});
+
+const thinLine = document.createElement("button");
+thinLine.innerHTML = "Thin Line";
+thinLine.addEventListener("click", () => {
+    lineThin = true;
+});
+app.append(thickLine);
+app.append(thinLine);  
+
+
 
 
 
