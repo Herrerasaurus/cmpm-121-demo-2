@@ -107,7 +107,7 @@ class StickerCommand{
         if (ctx) {
             //place one of the stickers
             ctx.font = "30px Arial";
-            const {x, y} = this.points[0];
+            const {x, y, cursor} = this.points[0];
             ctx.fillText(cursor, x-15, y+5);
         }
     }
