@@ -24,12 +24,10 @@ app.append(spacer);
 // add simple marker drawing
 const ctx = canvas.getContext("2d");
 
-let lineThin = true;
-
-
 // array for mouse input
 const commands: LineCommand[] = [];
 const redoCommands: (LineCommand | never[])[] = [];
+let cursorCommand: CursorCommand | null = null;
 
 // add observer for "drawing-changed" event to clear and redraw user lines
 const updateCanvas = new Event("drawing-changed");
@@ -39,8 +37,32 @@ canvas.addEventListener("drawing-changed", (e) => {
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         commands.forEach(command => command.execute());
+        if(cursorCommand){
+            cursorCommand.execute(ctx);
+        }
     }
 });
+
+class CursorCommand{
+    x: number;
+    y: number;
+    lineWidth: number;
+    constructor (x: number, y: number, lineWidth: number){
+        this.x = x;
+        this.y = y;
+        this.lineWidth = lineWidth;
+    }
+    execute(ctx: CanvasRenderingContext2D){
+            //make text bold if line width is 6
+            if(this.lineWidth == 6){
+                ctx.font = "20px Arial";
+            }else{
+                ctx.font = "10px Arial";
+            }
+            ctx.fillText("●", this.x-5, this.y+3);
+
+        }
+    }
 
 class LineCommand{
     points: { x: number; y: number; lineWidth: number; }[];
@@ -70,14 +92,19 @@ let currentLineCommand: LineCommand | null = null;
 
 let lineWidth = 2;
 
-// get user input
+// get user input for cursor
+canvas.addEventListener("mouseout", (e) => {
+    cursorCommand = null;
+    canvas.dispatchEvent(updateCanvas);
+});
+
+canvas.addEventListener("mouseenter", (e) => {
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, lineWidth);
+    canvas.dispatchEvent(updateCanvas);
+});
+
+// get user input for drawing
 canvas.addEventListener("mousedown", (e) => {
-    if(lineThin){
-        lineWidth = 2;
-    }
-    else{
-        lineWidth = 6;
-    }
     currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth);
     commands.push(currentLineCommand);
     redoCommands.splice(0, redoCommands.length);
@@ -86,8 +113,12 @@ canvas.addEventListener("mousedown", (e) => {
 
 
 canvas.addEventListener("mousemove", (e) => {
-    currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, lineWidth);
     canvas.dispatchEvent(updateCanvas);
+    if(e.buttons == 1){
+        currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
+        canvas.dispatchEvent(updateCanvas);
+    }
 });
 
 canvas.addEventListener("mouseup", (e) => {
@@ -136,14 +167,16 @@ app.append(redoButton);
 const thickLine = document.createElement("button");
 thickLine.innerHTML = "Thick Line";
 thickLine.addEventListener("click", () => {
-    lineThin = false;
+    lineWidth = 6;
 });
 
 const thinLine = document.createElement("button");
 thinLine.innerHTML = "Thin Line";
 thinLine.addEventListener("click", () => {
-    lineThin = true;
+    lineWidth = 2;
 });
+
+app.append(document.createElement("br"));
 app.append(thickLine);
 app.append(thinLine);  
 
