@@ -53,7 +53,6 @@ class CursorCommand{
         this.lineWidth = lineWidth;
     }
     execute(ctx: CanvasRenderingContext2D){
-            //make text bold if line width is 6
             if(this.lineWidth == 6){
                 ctx.font = "20px Arial";
             }else{
@@ -178,7 +177,32 @@ thinLine.addEventListener("click", () => {
 
 app.append(document.createElement("br"));
 app.append(thickLine);
-app.append(thinLine);  
+app.append(thinLine); 
+
+// add stickers
+const sticker1 = document.createElement("button");
+sticker1.innerHTML = "🧌";
+sticker1.addEventListener("click", () => {
+    
+});
+
+const sticker2 = document.createElement("button");
+sticker2.innerHTML = "🦆";
+sticker2.addEventListener("click", () => {
+    
+});
+
+const sticker3 = document.createElement("button");
+sticker3.innerHTML = "😜";
+sticker3.addEventListener("click", () => {
+    
+});
+
+app.append(document.createElement("br"));
+app.append(sticker1);
+app.append(sticker2);
+app.append(sticker3);
+
 
 
 
