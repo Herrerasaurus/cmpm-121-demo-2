@@ -151,8 +151,16 @@ canvas.addEventListener("mousemove", (e) => {
         if (currentLineCommand instanceof LineCommand) {
             currentLineCommand.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
         }
-        canvas.dispatchEvent(updateCanvas);
+    }else{
+        if(currentLineCommand instanceof StickerCommand){
+            //transform sticker position
+            currentLineCommand.points[0].x = e.offsetX;
+            currentLineCommand.points[0].y = e.offsetY;
+        }
+
     }
+    canvas.dispatchEvent(updateCanvas);
+
 });
 
 canvas.addEventListener("mouseup", (e) => {
