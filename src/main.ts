@@ -43,11 +43,15 @@ canvas.addEventListener("drawing-changed", (e) => {
     }
 });
 
+let cursor = "";
+
 class CursorCommand{
+    cursor: string;
     x: number;
     y: number;
     lineWidth: number;
-    constructor (x: number, y: number, lineWidth: number){
+    constructor (cursor: string, x: number, y: number, lineWidth: number){
+        this.cursor = cursor;
         this.x = x;
         this.y = y;
         this.lineWidth = lineWidth;
@@ -58,8 +62,7 @@ class CursorCommand{
             }else{
                 ctx.font = "10px Arial";
             }
-            ctx.fillText("●", this.x-5, this.y+3);
-
+            ctx.fillText(this.cursor, this.x-5, this.y+3);
         }
     }
 
@@ -98,7 +101,7 @@ canvas.addEventListener("mouseout", (e) => {
 });
 
 canvas.addEventListener("mouseenter", (e) => {
-    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, lineWidth);
+    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth);
     canvas.dispatchEvent(updateCanvas);
 });
 
@@ -112,7 +115,7 @@ canvas.addEventListener("mousedown", (e) => {
 
 
 canvas.addEventListener("mousemove", (e) => {
-    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, lineWidth);
+    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth);
     canvas.dispatchEvent(updateCanvas);
     if(e.buttons == 1){
         currentLineCommand?.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
@@ -167,12 +170,14 @@ const thickLine = document.createElement("button");
 thickLine.innerHTML = "Thick Line";
 thickLine.addEventListener("click", () => {
     lineWidth = 6;
+    cursor = "●";
 });
 
 const thinLine = document.createElement("button");
 thinLine.innerHTML = "Thin Line";
 thinLine.addEventListener("click", () => {
     lineWidth = 2;
+    cursor = "●";
 });
 
 app.append(document.createElement("br"));
@@ -183,19 +188,22 @@ app.append(thinLine);
 const sticker1 = document.createElement("button");
 sticker1.innerHTML = "🧌";
 sticker1.addEventListener("click", () => {
-    
+    cursor = "🧌";
+    canvas.dispatchEvent(updateCanvas);
 });
 
 const sticker2 = document.createElement("button");
 sticker2.innerHTML = "🦆";
 sticker2.addEventListener("click", () => {
-    
+    cursor = "🦆"  ;
+    canvas.dispatchEvent(updateCanvas);
 });
 
 const sticker3 = document.createElement("button");
 sticker3.innerHTML = "😜";
 sticker3.addEventListener("click", () => {
-    
+    cursor = "😜";
+    canvas.dispatchEvent(updateCanvas);
 });
 
 app.append(document.createElement("br"));
