@@ -1,6 +1,6 @@
 import "./style.css";
 
-const APP_NAME = "Hello World";
+const APP_NAME = "Sticker Sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 document.title = APP_NAME;
@@ -26,12 +26,9 @@ exportButton.addEventListener("click", () => {
         ctx.scale(4, 4);
         commands.forEach(command => command.display());
         ctx.scale(1, 1);
-
         ctx = canvas.getContext("2d");
 
     }
-    //execute items on display list for new canvas with new context object
-
 
     const anchor = document.createElement("a");
     anchor.href = exportCanvas.toDataURL("image/png");
@@ -40,17 +37,16 @@ exportButton.addEventListener("click", () => {
 
 });
 app.append(exportButton);
+app.append(document.createElement("br"));
+app.append(document.createElement("br"));
 
 //add a canvas to the webpage (size 256x256)
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 app.append(canvas);
-
-// adding spacing between canvas and buttons
-const spacer = document.createElement("div");
-spacer.style.height = "20px";
-app.append(spacer);
+app.append(document.createElement("br"));
+app.append(document.createElement("br"));
 
 // add simple marker drawing
 let ctx = canvas.getContext("2d");
@@ -137,9 +133,11 @@ class StickerCommand{
     display(){
         if (ctx) {
             //place one of the stickers
+            const xShift = 15;
+            const yShift = 5;
             ctx.font = "30px Arial";
             const {x, y, cursor} = this.points[0];
-            ctx.fillText(cursor, x-15, y+5);
+            ctx.fillText(cursor, x - xShift, y + yShift);
         }
     }
     grow(x: number, y: number, cursor: string){
@@ -152,7 +150,7 @@ let currentLineCommand: LineCommand | StickerCommand | null = null;
 let lineWidth = 2;
 
 // get user input for cursor
-canvas.addEventListener("mouseout", (e) => {
+canvas.addEventListener("mouseout", () => {
     cursorCommand = null;
     canvas.dispatchEvent(updateCanvas);
 });
@@ -194,7 +192,7 @@ canvas.addEventListener("mousemove", (e) => {
 
 });
 
-canvas.addEventListener("mouseup", (e) => {
+canvas.addEventListener("mouseup", () => {
     currentLineCommand = null;
     canvas.dispatchEvent(updateCanvas);
 });
@@ -238,6 +236,7 @@ redoButton.addEventListener("click", () => {
     }
 });
 app.append(redoButton);
+app.append(document.createElement("br"));
 
 //adding different line width buttons
 const thickLine = document.createElement("button");
@@ -254,21 +253,19 @@ thinLine.addEventListener("click", () => {
     cursor = "●";
 });
 
-app.append(document.createElement("br"));
 app.append(thickLine);
 app.append(thinLine);
 app.append(document.createElement("br"));
-
 
 interface Sticker{
     emoji: string,
 };
 
 const stickers: Sticker[] = [
+    {emoji: "{custom}"},
     {emoji: "🧌"},
     {emoji: "🦆"},
-    {emoji: "😜"},
-    {emoji: "{custom}"}
+    {emoji: "😜"}
 ];
 
 // function, add button
