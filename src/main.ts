@@ -79,31 +79,44 @@ class CursorCommand{
     y: number;
     lineWidth: number;
     lineColor: string;
-    constructor (cursor: string, x: number, y: number, lineWidth: number, lineColor: string){
+    rotationValue: number;
+    constructor (cursor: string, x: number, y: number, lineWidth: number, lineColor: string, rotationValue: number){
         this.cursor = cursor;
         this.x = x;
         this.y = y;
         this.lineWidth = lineWidth;
-        this.lineColor = lineColor
+        this.lineColor = lineColor;
+        this.rotationValue = rotationValue;
     }
     display(ctx: CanvasRenderingContext2D){
             let xShift = 0;
-            let yShift = 0;
+            let yShift = 0;            
+            ctx.fillStyle = this.lineColor;
             if(this.lineWidth == 6){
                 xShift = 10;
                 yShift = 18;
                 ctx.font = "40px Arial";
+                ctx.fillText(this.cursor, this.x - xShift, this.y + yShift);
+
             }else if (this.lineWidth == 3){
                 xShift = 8;
                 yShift = 12;
                 ctx.font = "30px Arial";
+                ctx.fillText(this.cursor, this.x - xShift, this.y + yShift);
+
             }else{
                 xShift = 15;
                 yShift = 6;
                 ctx.font = "30px Arial";
+                ctx.save();
+                const textMetrics = ctx.measureText(cursor);
+                const width = textMetrics.width;
+                const height = 30;
+                ctx.translate(this.x + width/2, this.y + height / 2);
+                ctx.rotate(rotationValue * Math.PI / 180);
+                ctx.fillText(cursor, -width/2, height / 2);
+                ctx.restore();
             }
-            ctx.fillStyle = this.lineColor;
-            ctx.fillText(this.cursor, this.x - xShift, this.y + yShift);
         }
     }
 
@@ -131,23 +144,30 @@ class LineCommand{
     }
 }
 
+let rotationValue = 0;
+
 class StickerCommand{
-    points: {x: number; y: number; cursor: string}[];
-    constructor (x: number, y: number, cursor: string){
-        this.points = [{x, y, cursor}];
+    points: {x: number; y: number; cursor: string, rotationValue: number}[];
+    constructor (x: number, y: number, cursor: string, rotationValue: number){
+        this.points = [{x, y, cursor, rotationValue}];
     }
     display(){
         if (ctx) {
             //place one of the stickers
-            const xShift = 15;
-            const yShift = 5;
             ctx.font = "30px Arial";
-            const {x, y, cursor} = this.points[0];
-            ctx.fillText(cursor, x - xShift, y + yShift);
+            const {x, y, cursor, rotationValue} = this.points[0];
+            ctx.save();
+            const textMetrics = ctx.measureText(cursor);
+            const width = textMetrics.width;
+            const height = 30;
+            ctx.translate(x + width/2, y + height / 2);
+            ctx.rotate(rotationValue * Math.PI / 180);
+            ctx.fillText(cursor, -width/2, height / 2);
+            ctx.restore();
         }
     }
-    grow(x: number, y: number, cursor: string){
-        this.points.push({x, y, cursor});
+    grow(x: number, y: number, cursor: string, rotationValue: number){
+        this.points.push({x, y, cursor, rotationValue});
     }
 }
 
@@ -162,7 +182,7 @@ canvas.addEventListener("mouseout", () => {
 });
 
 canvas.addEventListener("mouseenter", (e) => {
-    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth, lineColor);
+    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth, lineColor, rotationValue);
     canvas.dispatchEvent(updateCanvas);
 });
 
@@ -171,7 +191,7 @@ canvas.addEventListener("mousedown", (e) => {
     if(cursor == "*"){
         currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth, lineColor);
     }else{
-        currentLineCommand = new StickerCommand(e.offsetX, e.offsetY, cursor);
+        currentLineCommand = new StickerCommand(e.offsetX, e.offsetY, cursor, rotationValue);
     }
     commands.push(currentLineCommand);
     redoCommands.splice(0, redoCommands.length);
@@ -180,7 +200,7 @@ canvas.addEventListener("mousedown", (e) => {
 
 
 canvas.addEventListener("mousemove", (e) => {
-    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth, lineColor);
+    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth, lineColor, rotationValue);
     canvas.dispatchEvent(updateCanvas);
     if(cursor == "*"){
         if (currentLineCommand instanceof LineCommand) {
@@ -275,6 +295,29 @@ app.append(thickLine);
 app.append(thinLine);
 app.append(document.createElement("br"));
 
+// rotate sticker orientation with range slider
+const rotateSlider = document.createElement("input");
+rotateSlider.type = "range";
+rotateSlider.min = "0";
+rotateSlider.max = "360";
+rotateSlider.value = "0";
+rotateSlider.addEventListener("input", (e) => {
+    rotationValue = parseInt(rotateSlider.value, 10);
+    if (currentLineCommand instanceof StickerCommand) {
+        currentLineCommand.points[0].rotationValue = rotationValue;
+    }
+    canvas.dispatchEvent(updateCanvas);
+});
+
+
+const rotateLabel = document.createElement("label");
+rotateLabel.innerHTML = "Rotate Sticker";
+
+app.append(rotateLabel);
+app.append(document.createElement("br"));
+app.append(rotateSlider);
+app.append(document.createElement("br"));
+
 interface Sticker{
     emoji: string,
 };
@@ -320,6 +363,7 @@ for(let i = 0; i < stickers.length; i++){
     const newButton = new addButton(sticker.emoji);
     newButton.display();
 }
+
 
 
 
