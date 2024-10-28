@@ -8,12 +8,43 @@ document.title = APP_NAME;
 // add app title to webpage
 const appTitle = document.createElement("h1");
 appTitle.innerHTML = APP_NAME;
+app.append(appTitle);
+
+
+//adding export feature
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export";
+exportButton.addEventListener("click", () => {
+    //temporary canvas object of 1024x1024 size
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 1024;
+    exportCanvas.height = 1024;
+    
+    //prepare canvasrenderincontext2d object for canvas, using scale (x,y)
+    ctx = exportCanvas.getContext("2d");
+    if(ctx){
+        ctx.scale(4, 4);
+        commands.forEach(command => command.display());
+        ctx.scale(1, 1);
+
+        ctx = canvas.getContext("2d");
+
+    }
+    //execute items on display list for new canvas with new context object
+
+
+    const anchor = document.createElement("a");
+    anchor.href = exportCanvas.toDataURL("image/png");
+    anchor.download = "sketchpad.png";
+    anchor.click();
+
+});
+app.append(exportButton);
 
 //add a canvas to the webpage (size 256x256)
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
-app.append(appTitle);
 app.append(canvas);
 
 // adding spacing between canvas and buttons
@@ -22,7 +53,7 @@ spacer.style.height = "20px";
 app.append(spacer);
 
 // add simple marker drawing
-const ctx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d");
 
 // array for mouse input
 const commands: (LineCommand | StickerCommand)[] = [];
@@ -274,6 +305,8 @@ for(let i = 0; i < stickers.length; i++){
     const newButton = new addButton(sticker.emoji);
     newButton.display();
 }
+
+
 
 
 
