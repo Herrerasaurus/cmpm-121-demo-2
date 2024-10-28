@@ -225,38 +225,41 @@ thinLine.addEventListener("click", () => {
 
 app.append(document.createElement("br"));
 app.append(thickLine);
-app.append(thinLine); 
-
-// add stickers
-const sticker1 = document.createElement("button");
-sticker1.innerHTML = "🧌";
-sticker1.addEventListener("click", () => {
-    lineWidth = 0;
-    cursor = "🧌";
-    canvas.dispatchEvent(updateCanvas);
-});
-
-const sticker2 = document.createElement("button");
-sticker2.innerHTML = "🦆";
-sticker2.addEventListener("click", () => {
-    lineWidth = 0;
-    cursor = "🦆"  ;
-    canvas.dispatchEvent(updateCanvas);
-});
-
-const sticker3 = document.createElement("button");
-sticker3.innerHTML = "😜";
-sticker3.addEventListener("click", () => {
-    lineWidth = 0;
-    cursor = "😜";
-    canvas.dispatchEvent(updateCanvas);
-});
-
+app.append(thinLine);
 app.append(document.createElement("br"));
-app.append(sticker1);
-app.append(sticker2);
-app.append(sticker3);
 
+
+interface Sticker{
+    cursor: string,
+    lineWidth: number
+};
+
+const stickers: Sticker[] = [
+    {cursor: "🧌", lineWidth: 0},
+    {cursor: "🦆", lineWidth: 0},
+    {cursor: "😜", lineWidth: 0},
+    {cursor: "{custom}", lineWidth: 0}
+];
+
+
+for(let i = 0; i < stickers.length; i++){
+    const sticker = stickers[i];
+    const stickerButton = document.createElement("button");
+    stickerButton.innerHTML = sticker.cursor;
+    stickerButton.addEventListener("click", () => {
+        lineWidth = sticker.lineWidth;
+        cursor = sticker.cursor;
+        if(cursor == "{custom}"){
+            let customSticker = prompt("Enter a custom sticker", "😀");
+            if(customSticker != null){
+                cursor = customSticker;
+                stickerButton.innerHTML = customSticker;
+            }
+        }
+        canvas.dispatchEvent(updateCanvas);
+    });
+    app.append(stickerButton);
+}
 
 
 
