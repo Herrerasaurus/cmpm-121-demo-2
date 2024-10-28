@@ -59,7 +59,7 @@ let cursorCommand: CursorCommand | null = null;
 // add observer for "drawing-changed" event to clear and redraw user lines
 const updateCanvas = new Event("drawing-changed");
 
-canvas.addEventListener("drawing-changed", (e) => {
+canvas.addEventListener("drawing-changed", () => {
     // clear canvas
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -71,17 +71,20 @@ canvas.addEventListener("drawing-changed", (e) => {
 });
 
 let cursor = "*";
+let lineColor = getRandomColor();
 
 class CursorCommand{
     cursor: string;
     x: number;
     y: number;
     lineWidth: number;
-    constructor (cursor: string, x: number, y: number, lineWidth: number){
+    lineColor: string;
+    constructor (cursor: string, x: number, y: number, lineWidth: number, lineColor: string){
         this.cursor = cursor;
         this.x = x;
         this.y = y;
         this.lineWidth = lineWidth;
+        this.lineColor = lineColor
     }
     display(ctx: CanvasRenderingContext2D){
             let xShift = 0;
@@ -90,39 +93,41 @@ class CursorCommand{
                 xShift = 10;
                 yShift = 18;
                 ctx.font = "40px Arial";
-            }else if (this.lineWidth == 2){
-                xShift = 6;
-                yShift = 8;
-                ctx.font = "20px Arial";
+            }else if (this.lineWidth == 3){
+                xShift = 8;
+                yShift = 12;
+                ctx.font = "30px Arial";
             }else{
                 xShift = 15;
                 yShift = 6;
                 ctx.font = "30px Arial";
             }
+            ctx.fillStyle = this.lineColor;
             ctx.fillText(this.cursor, this.x - xShift, this.y + yShift);
         }
     }
 
 class LineCommand{
-    points: {x: number; y: number; lineWidth: number;}[];
-    constructor (x: number, y: number, lineWidth: number){
-        this.points = [{x, y, lineWidth}];
+    points: {x: number; y: number; lineWidth: number; lineColor: string;}[];
+    constructor (x: number, y: number, lineWidth: number, lineColor: string){
+        this.points = [{x, y, lineWidth, lineColor}];
     }
     display(){
         if (ctx) {
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = this.points[0].lineColor;
             ctx.beginPath();
             const {x, y} = this.points[0];
             ctx.moveTo(x, y);
-            for(const {x, y, lineWidth} of this.points){
+            for(const {x, y, lineWidth, lineColor} of this.points){
                 ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = lineColor;
                 ctx.lineTo(x, y);
             }
             ctx.stroke();
         }
     }
-    grow(x: number, y: number, lineWidth: number){
-        this.points.push({x, y, lineWidth});
+    grow(x: number, y: number, lineWidth: number, lineColor: string){
+        this.points.push({x, y, lineWidth, lineColor});
     }
 }
 
@@ -148,7 +153,7 @@ class StickerCommand{
 
 let currentLineCommand: LineCommand | StickerCommand | null = null;
 
-let lineWidth = 2;
+let lineWidth = 3;
 
 // get user input for cursor
 canvas.addEventListener("mouseout", () => {
@@ -157,14 +162,14 @@ canvas.addEventListener("mouseout", () => {
 });
 
 canvas.addEventListener("mouseenter", (e) => {
-    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth);
+    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth, lineColor);
     canvas.dispatchEvent(updateCanvas);
 });
 
 // get user input for drawing
 canvas.addEventListener("mousedown", (e) => {
     if(cursor == "*"){
-        currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth);
+        currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth, lineColor);
     }else{
         currentLineCommand = new StickerCommand(e.offsetX, e.offsetY, cursor);
     }
@@ -175,11 +180,11 @@ canvas.addEventListener("mousedown", (e) => {
 
 
 canvas.addEventListener("mousemove", (e) => {
-    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth);
+    cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth, lineColor);
     canvas.dispatchEvent(updateCanvas);
     if(cursor == "*"){
         if (currentLineCommand instanceof LineCommand) {
-            currentLineCommand.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
+            currentLineCommand.points.push({x: e.offsetX, y: e.offsetY, lineWidth, lineColor});
         }
     }else{
         if(currentLineCommand instanceof StickerCommand){
@@ -239,10 +244,21 @@ redoButton.addEventListener("click", () => {
 app.append(redoButton);
 app.append(document.createElement("br"));
 
+//randomize color
+function getRandomColor(){
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for(let i = 0; i < 6; i++){
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
 //adding different line width buttons
 const thickLine = document.createElement("button");
 thickLine.innerHTML = "Thick Line";
 thickLine.addEventListener("click", () => {
+    lineColor = getRandomColor();
     lineWidth = 6;
     cursor = "*";
 });
@@ -250,7 +266,8 @@ thickLine.addEventListener("click", () => {
 const thinLine = document.createElement("button");
 thinLine.innerHTML = "Thin Line";
 thinLine.addEventListener("click", () => {
-    lineWidth = 2;
+    lineColor = getRandomColor();
+    lineWidth = 3;
     cursor = "*";
 });
 
