@@ -230,36 +230,52 @@ app.append(document.createElement("br"));
 
 
 interface Sticker{
-    cursor: string,
-    lineWidth: number
+    emoji: string,
 };
 
 const stickers: Sticker[] = [
-    {cursor: "🧌", lineWidth: 0},
-    {cursor: "🦆", lineWidth: 0},
-    {cursor: "😜", lineWidth: 0},
-    {cursor: "{custom}", lineWidth: 0}
+    {emoji: "🧌"},
+    {emoji: "🦆"},
+    {emoji: "😜"},
+    {emoji: "{custom}"}
 ];
 
+// function, add button
+class addButton{
+    emoji: string;
+    constructor(emoji: string){
+        this.emoji = emoji;
+    }
+    display(){
+        const button = document.createElement("button");
+        button.innerHTML = this.emoji;
+        button.addEventListener("click", () => {
+            lineWidth = 0;
+            if(this.emoji == "{custom}"){
+                const customSticker = prompt("Enter a custom sticker", "😀");
+                if(customSticker != null){
+                    const newSticker = {emoji: customSticker};
+                    stickers.push(newSticker);
+                    const newButton = new addButton(customSticker);
+                    newButton.display();
+                    cursor = customSticker;
+                }
+            }else{
+                cursor = this.emoji;
+            }
+            canvas.dispatchEvent(updateCanvas);
+        });
+        app.append(button);
+    }
+}
 
 for(let i = 0; i < stickers.length; i++){
     const sticker = stickers[i];
-    const stickerButton = document.createElement("button");
-    stickerButton.innerHTML = sticker.cursor;
-    stickerButton.addEventListener("click", () => {
-        lineWidth = sticker.lineWidth;
-        cursor = sticker.cursor;
-        if(cursor == "{custom}"){
-            let customSticker = prompt("Enter a custom sticker", "😀");
-            if(customSticker != null){
-                cursor = customSticker;
-                stickerButton.innerHTML = customSticker;
-            }
-        }
-        canvas.dispatchEvent(updateCanvas);
-    });
-    app.append(stickerButton);
+    const newButton = new addButton(sticker.emoji);
+    newButton.display();
 }
+
+
 
 
 
