@@ -70,7 +70,7 @@ canvas.addEventListener("drawing-changed", (e) => {
     }
 });
 
-let cursor = "●";
+let cursor = "*";
 
 class CursorCommand{
     cursor: string;
@@ -87,12 +87,13 @@ class CursorCommand{
             let xShift = 0;
             let yShift = 0;
             if(this.lineWidth == 6){
-                xShift = 8;
-                yShift = 3;
-                ctx.font = "20px Arial";
+                xShift = 10;
+                yShift = 18;
+                ctx.font = "40px Arial";
             }else if (this.lineWidth == 2){
-                xShift = 5;
-                ctx.font = "10px Arial";
+                xShift = 6;
+                yShift = 8;
+                ctx.font = "20px Arial";
             }else{
                 xShift = 15;
                 yShift = 6;
@@ -162,7 +163,7 @@ canvas.addEventListener("mouseenter", (e) => {
 
 // get user input for drawing
 canvas.addEventListener("mousedown", (e) => {
-    if(cursor == "●"){
+    if(cursor == "*"){
         currentLineCommand = new LineCommand(e.offsetX, e.offsetY, lineWidth);
     }else{
         currentLineCommand = new StickerCommand(e.offsetX, e.offsetY, cursor);
@@ -176,7 +177,7 @@ canvas.addEventListener("mousedown", (e) => {
 canvas.addEventListener("mousemove", (e) => {
     cursorCommand = new CursorCommand(cursor, e.offsetX, e.offsetY, lineWidth);
     canvas.dispatchEvent(updateCanvas);
-    if(cursor == "●"){
+    if(cursor == "*"){
         if (currentLineCommand instanceof LineCommand) {
             currentLineCommand.points.push({x: e.offsetX, y: e.offsetY, lineWidth});
         }
@@ -243,14 +244,14 @@ const thickLine = document.createElement("button");
 thickLine.innerHTML = "Thick Line";
 thickLine.addEventListener("click", () => {
     lineWidth = 6;
-    cursor = "●";
+    cursor = "*";
 });
 
 const thinLine = document.createElement("button");
 thinLine.innerHTML = "Thin Line";
 thinLine.addEventListener("click", () => {
     lineWidth = 2;
-    cursor = "●";
+    cursor = "*";
 });
 
 app.append(thickLine);
