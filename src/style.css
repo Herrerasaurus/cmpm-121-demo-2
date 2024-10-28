@@ -72,13 +72,13 @@ canvas{
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 20px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  padding: 0.8em 1.2em;
+  font-size: 1.2em;
+  font-weight: 1000;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #451615;
   cursor: pointer;
   transition: border-color 0.25s;
   margin: 0 auto;
