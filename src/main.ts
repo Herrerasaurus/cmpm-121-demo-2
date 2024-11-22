@@ -31,16 +31,14 @@ app.append(createButton("Export", () => {
     anchor.download = "sketchpad.png";
     anchor.click();
 }));
-app.append(document.createElement("br"));
-app.append(document.createElement("br"));
+app.append(document.createElement("br"), document.createElement("br"));
 
 //add a canvas to the webpage (size 256x256)
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 app.append(canvas);
-app.append(document.createElement("br"));
-app.append(document.createElement("br"));
+app.append(document.createElement("br"), document.createElement("br"));
 
 // add simple marker drawing
 let ctx = canvas.getContext("2d");
@@ -65,7 +63,7 @@ canvas.addEventListener("drawing-changed", () => {
 });
 
 let cursor = "*";
-let lineColor = getRandomColor();
+let lineColor = "black";
 
 class CursorCommand {
     cursor: string;
@@ -193,7 +191,6 @@ canvas.addEventListener("mouseenter", (e) => {
 // get user input for drawing
 canvas.addEventListener("mousedown", (e) => {
     // Refactoring code -- itzzbeatrizz
-    cursor === "*" ? lineColor = getRandomColor() : lineColor = cursor;
     if (cursor == "*") {
         currentLineCommand = new LineCommand(
             e.offsetX,
@@ -249,6 +246,45 @@ canvas.addEventListener("mouseup", () => {
     canvas.dispatchEvent(updateCanvas);
 });
 
+// rotate sticker orientation with range slider
+const rotateSlider = document.createElement("input");
+rotateSlider.type = "range";
+rotateSlider.min = "0";
+rotateSlider.max = "360";
+rotateSlider.value = "0";
+rotateSlider.style.marginRight = "50px";
+rotateSlider.addEventListener("input", (e) => {
+    rotationValue = parseInt(rotateSlider.value, 10);
+    if (currentLineCommand instanceof StickerCommand) {
+        currentLineCommand.points[0].rotationValue = rotationValue;
+    }
+    canvas.dispatchEvent(updateCanvas);
+});
+
+// Allow players to manually change the color of the line
+// Raquel Bravo
+const colorPicker = document.createElement("input");
+colorPicker.type = "color";
+colorPicker.value = "#000000";
+colorPicker.style.marginLeft = "10px";
+colorPicker.addEventListener("input", (e) => {
+    lineColor = (e.target as HTMLInputElement).value;
+    canvas.dispatchEvent(updateCanvas);
+});
+
+const rotateLabel = document.createElement("label");
+rotateLabel.innerHTML = "Rotate Sticker";
+app.append(rotateLabel);
+const colorLabel = document.createElement("label");
+colorLabel.innerHTML = "Line Color";
+colorLabel.style.marginLeft = "60px";
+app.append(colorLabel);
+app.append(document.createElement("br"));
+
+app.append(rotateSlider);
+app.append(colorPicker);
+app.append(document.createElement("br"));
+
 // Refactoring clear, undo, and redo buttons with helper function -- itzzbeatrizz
 app.append(createButton("Clear", () => {
     if (ctx) {
@@ -277,50 +313,21 @@ app.append(createButton("Redo", () => {
         canvas.dispatchEvent(updateCanvas);
     }
 }));
-
 app.append(document.createElement("br"));
-
-//randomize color
-function getRandomColor() {
-    // Simplified random color generator -- itzzbeatrizz
-    return "#" + Math.floor(Math.random() * 16777215).toString(16);
-}
 
 //adding different line width buttons
 // Refactoring line width buttons with helper function -- itzzbeatrizz
 app.append(createButton("Thick Line", () => {
-    lineColor = getRandomColor();
+    //lineColor = getRandomColor();
     lineWidth = 6;
     cursor = "*";
 }));
 
 app.append(createButton("Thin Line", () => {
-    lineColor = getRandomColor();
+    //lineColor = getRandomColor();
     lineWidth = 3;
     cursor = "*";
 }));
-app.append(document.createElement("br"));
-
-// rotate sticker orientation with range slider
-const rotateSlider = document.createElement("input");
-rotateSlider.type = "range";
-rotateSlider.min = "0";
-rotateSlider.max = "360";
-rotateSlider.value = "0";
-rotateSlider.addEventListener("input", (e) => {
-    rotationValue = parseInt(rotateSlider.value, 10);
-    if (currentLineCommand instanceof StickerCommand) {
-        currentLineCommand.points[0].rotationValue = rotationValue;
-    }
-    canvas.dispatchEvent(updateCanvas);
-});
-
-const rotateLabel = document.createElement("label");
-rotateLabel.innerHTML = "Rotate Sticker";
-
-app.append(rotateLabel);
-app.append(document.createElement("br"));
-app.append(rotateSlider);
 app.append(document.createElement("br"));
 
 interface Sticker {
@@ -368,6 +375,7 @@ for (let i = 0; i < stickers.length; i++) {
     const newButton = new addButton(sticker.emoji);
     newButton.display();
 }
+app.append(document.createElement("br"));
 
 // Refactoring button creation into a helper function -- itzzbeatrizz
 function createButton(text: string, onClick: () => void) {
